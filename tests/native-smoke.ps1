@@ -26,6 +26,6 @@ try {
     $functions = [Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer([DllSmoke]::GetProcAddress($dll,'getFuncsArray'),[type][DllSmoke+Functions])
     $count = 0
     $items = $functions.Invoke([ref]$count)
-    if ($items -eq [IntPtr]::Zero -or $count -ne 3) { throw 'Invalid command exports' }
-    Write-Output 'Native DLL smoke passed: load, six exports, Unicode, plugin name and three commands.'
+    if ($items -eq [IntPtr]::Zero -or $count -ne 5) { throw 'Invalid command exports' }
+    Write-Output 'Native DLL smoke passed: load, six exports, Unicode, plugin name and five commands.'
 } finally { [DllSmoke]::FreeLibrary($dll) | Out-Null }

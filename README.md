@@ -41,6 +41,18 @@ powershell -ExecutionPolicy Bypass -File scripts/package.ps1 -Architecture x86
 
 ## 安装
 
+### 右键菜单、浮动预览与 PDF 导出
+
+开发版新增 Floating preview 和 Export PDF... 命令，位于 **插件 → mdviewer**。Floating preview 打开可移动、缩放的独立窗口，可与停靠面板同时显示；关闭浮动窗口不会关闭当前文档。
+
+Export PDF... 选择保存路径后直接生成 PDF 文件，不打开打印对话框。导出使用当前文档快照并等待 Mermaid 和字体就绪；页面工具栏和状态栏不写入 PDF。需要支持 PDF 导出的 WebView2 Runtime。
+
+要把四个常用命令加入编辑区右键菜单的 **Plugin commands** 子菜单，先通过 **设置 → 编辑右键菜单** 找到实际 contextMenu.xml 所在目录，关闭 Notepad++，然后运行：
+
+    powershell -ExecutionPolicy Bypass -File scripts/install-context-menu.ps1 -ConfigDirectory '<实际配置目录>'
+
+安装脚本会备份原配置，保留用户已有条目，重复执行不会重复添加。便携版配置通常位于程序目录；安装版请使用实际用户配置目录。重启后生效。新功能尚未重新发布到 v0.1.0 Release。
+
 关闭 Notepad++，将对应架构目录的内容复制到其 `plugins/mdviewer`：x86 使用 `dist/x86/mdviewer`，x64 使用 `dist/mdviewer`。保持 `plugins/mdviewer/mdviewer.dll` 与旁边的 `web` 和许可证文件。重启后选择 **插件 → mdviewer → Preview**。不要只复制 DLL。可分发 ZIP 通过 `scripts/package.ps1 -Architecture x86|x64` 生成到 `dist/releases`。
 
 WebView2 用户数据放在 `%LOCALAPPDATA%/mdviewer/WebView2`。插件缺失资源或运行时时在面板提示错误。预览链接不会自动打开程序，可复制链接后自行打开。

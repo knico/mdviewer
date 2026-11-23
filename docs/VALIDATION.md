@@ -1,5 +1,13 @@
 # Validation — 2026-11-18
 
+## Development update — 2026-11-23
+
+- Added independent floating preview and direct PDF export, preserving Preview/Refresh/About command indices.
+- Isolated Notepad++ 7.7 x86 passed docked rendering, live editing, two simultaneous preview WebViews, floating show/close, native Save PDF dialog, valid PDF file creation and clean shutdown.
+- Initial export automation failures came from IntPtr zero checks, localized dialog titles and nested filename controls; the corrected harness passed. A separate test WebView profile avoids existing-user profile collisions.
+- Context menu setup is opt-in: four commands under Plugin commands with configuration backup and duplicate prevention.
+- Published v0.1.0 ZIP files and marketplace hashes remain unchanged. New features are development candidates; x64 runtime acceptance remains open.
+
 Marketplace packaging was rechecked on 2026-11-19: x86 and x64 packages have DLL FileVersion 0.1.0.0, correct PE machine type, and the plugin DLL plus offline web assets at the ZIP root. Their hashes and remaining listing gates are recorded in `docs/MARKETPLACE-READINESS.md`. This package check does not close real x64 host acceptance.
 
 ## x86 compatibility update (supersedes earlier x86 limitations)

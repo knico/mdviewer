@@ -14,6 +14,7 @@ let pending = null;
 let rendering = false;
 let previousKey = '';
 let activeTheme = 'system';
+let exportId;
 mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', maxTextSize: 50000, suppressErrorRendering: true, htmlLabels: false, flowchart: { htmlLabels: false } });
 
 async function drain() {
@@ -22,6 +23,7 @@ async function drain() {
   try {
     while (pending) {
       const data = pending;
+      exportId = data.exportId;
       pending = null;
       const id = ++revision;
       const sameDocument = data.key === previousKey;
@@ -48,9 +50,17 @@ async function drain() {
       }
       window.scrollTo(0, scroll);
       status.textContent = data.markdown ? 'Preview updated · offline' : 'Open a Markdown document to begin';
+      if (Number.isSafeInteger(data.exportId)) {
+        await document.fonts.ready;
+        // Hidden/minimized WebViews can suspend animation frames. Layout is
+        // performed by PDF export; only await resources, not visible frames.
+        await new Promise(resolve => setTimeout(resolve, 0));
+        window.chrome?.webview?.postMessage('pdf-ready:' + data.exportId);
+      }
     }
   } catch (error) {
     status.textContent = 'Preview failed: ' + error.message;
+    if (Number.isSafeInteger(exportId)) window.chrome?.webview?.postMessage('pdf-error:' + exportId);
   } finally { rendering = false; }
 }
 
