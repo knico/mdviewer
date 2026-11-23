@@ -47,7 +47,7 @@ powershell -ExecutionPolicy Bypass -File scripts/package.ps1 -Architecture x86
 
 Export PDF... 选择保存路径后直接生成 PDF 文件，不打开打印对话框。导出使用当前文档快照并等待 Mermaid 和字体就绪；页面工具栏和状态栏不写入 PDF。需要支持 PDF 导出的 WebView2 Runtime。
 
-要把四个常用命令加入编辑区右键菜单的 **Plugin commands** 子菜单，先通过 **设置 → 编辑右键菜单** 找到实际 contextMenu.xml 所在目录，关闭 Notepad++，然后运行：
+要把四个常用命令加入编辑区右键菜单的 **mdviewer** 子菜单，先通过 **设置 → 编辑右键菜单** 找到实际 contextMenu.xml 所在目录，关闭 Notepad++，然后运行：
 
     powershell -ExecutionPolicy Bypass -File scripts/install-context-menu.ps1 -ConfigDirectory '<实际配置目录>'
 

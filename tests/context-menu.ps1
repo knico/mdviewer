@@ -8,5 +8,11 @@ New-Item -ItemType Directory -Force $fixture | Out-Null
 [xml]$xml=Get-Content (Join-Path $fixture 'contextMenu.xml') -Raw
 if(@($xml.SelectNodes('//Item[@PluginEntryName="mdviewer"]')).Count -ne 4){throw 'Expected four unique commands'}
 if(!$xml.SelectSingleNode('//Item[@MenuItemName="Copy"]')){throw 'Existing user command lost'}
+if(@($xml.SelectNodes('//Item[@PluginEntryName="mdviewer" and @FolderName="mdviewer"]')).Count -ne 4){throw 'Wrong submenu name'}
+foreach($item in $xml.SelectNodes('//Item[@PluginEntryName="mdviewer"]')){$item.SetAttribute('FolderName','Plugin commands')}
+$xml.Save((Join-Path $fixture 'contextMenu.xml'))
+& (Join-Path $root 'scripts/install-context-menu.ps1') -ConfigDirectory $fixture
+[xml]$xml=Get-Content (Join-Path $fixture 'contextMenu.xml') -Raw
+if(@($xml.SelectNodes('//Item[@PluginEntryName="mdviewer" and @FolderName="mdviewer"]')).Count -ne 4){throw 'Legacy submenu migration failed'}
 if(@(Get-ChildItem $fixture -Filter '*.bak').Count -lt 1){throw 'Configuration backup missing'}
 Write-Output 'Context menu merge passed: four commands, preserved user entry, backup and idempotence.'
