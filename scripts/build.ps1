@@ -32,9 +32,9 @@ try {
     [IO.File]::WriteAllLines($build, $lines, [Text.Encoding]::ASCII)
     & cmd.exe /d /c $build
     if ($LASTEXITCODE -ne 0) { throw 'Native build failed' }
-    Copy-Item README.md,THIRD_PARTY.md,LICENSE $output -Force
+    Copy-Item THIRD_PARTY.md,LICENSE $output -Force
+    Copy-Item docs/INSTALLATION.md "$output/INSTALLATION.md" -Force
     Copy-Item scripts/install-context-menu.ps1 $output -Force
     Copy-Item .deps/webview2/LICENSE.txt "$output/WEBVIEW2-LICENSE.txt" -Force
-    Copy-Item docs/VALIDATION.md "$output/VALIDATION.md" -Force
     Write-Output "Built $output/mdviewer.dll (Windows $Architecture)"
 } finally { Pop-Location }

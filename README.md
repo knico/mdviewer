@@ -1,64 +1,65 @@
 # mdviewer
 
-mdviewer 是一个可扩展的 Markdown 实时预览项目。目前提供 Notepad++ 的 Windows x64 / x86 适配器；渲染核心和 Web 预览应用已与宿主适配层分离，未来可以复用到其他编辑器。
-
-## 工程结构
-
-- `packages/markdown-core`：Markdown 渲染核心，编辑器无关。
-- `apps/preview-web`：WebView 中运行的预览应用和页面资源。
-- `adapters/notepad-plus-plus/native`：Notepad++ 原生插件适配器（C++、WebView2、停靠面板和 Scintilla 文档同步）。
-- `tests`：渲染、浏览器和 Windows 原生宿主测试。
-
-2026-11-18 补充：32 位版位于 dist/x86/mdviewer；使用 scripts/build.ps1 -Architecture x86 构建。已在 Notepad++ 7.7 x86 的隔离副本中验证插件菜单、中文、公式、Mermaid、实时编辑与正常退出。下文早期的“32 位未实现”说明已被此记录取代。
+mdviewer 是 Notepad++ 的离线 Markdown 预览插件。它将 Markdown 渲染核心与编辑器适配层分开，当前提供 Windows x86 和 x64 原生适配器。
 
 ## 功能
 
-- 右侧可停靠预览面板；编辑防抖刷新、切换文档和保存时刷新。
-- CommonMark、表格、删除线、任务列表、脚注、代码高亮、KaTeX 公式、Mermaid 图。
-- 本地打包渲染资源；明暗主题切换；不依赖 CDN。
-- 默认禁用原始 HTML、图片、下载、弹窗和浏览器权限；文档上限 4 MiB。
+- 在 Notepad++ 停靠面板或独立浮动窗口中实时预览当前文档。
+- 支持 CommonMark、表格、任务列表、删除线、脚注、代码高亮、KaTeX 数学公式和 Mermaid 图表。
+- 使用随插件分发的前端资源，无需 CDN 或网络连接。
+- 可将当前文档导出为 PDF 文件。
+- 对原始 HTML、外部导航、下载、弹窗和浏览器权限采取限制策略。
+- 预览文档大小上限为 4 MiB。
 
-“最新 Markdown”没有统一扩展标准；本项目以上述功能清单为准。当前未实现本地图片、相对文件跳转、同步滚动、HTML 导出和 ARM64 构建。
+## 系统要求与兼容性
 
-## 构建
-
-需要 Windows 10/11、Visual Studio 2022 C++ 桌面开发工具、Node.js 22+ 和 Microsoft Edge WebView2 Runtime。
-
-```powershell
-npm ci --registry=https://registry.npmjs.org
-powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1
-npm test
-powershell -ExecutionPolicy Bypass -File scripts/build.ps1
-npm run test:browser
-powershell -ExecutionPolicy Bypass -File scripts/package.ps1 -Architecture x86
-```
-
-初次开发安装依赖使用 package.json/package-lock.json 固定版本。bootstrap 固定 Notepad++ v8.9.9.1 接口、WebView2 SDK 1.0.3650.58；可加 `-WithNotepad` 下载校验过 SHA256 的便携测试宿主。
-
-## 扩展到其他编辑器
-
-新增编辑器适配器时，复用 `packages/markdown-core` 的渲染接口和 `apps/preview-web` 的消息协议，另建对应的 `adapters/<editor>` 目录。适配器只负责读取当前文档、发送 Markdown 和接收预览状态；不要复制渲染逻辑。不同编辑器的安装包、运行时要求和测试应分别记录。
+- Windows 10 或 Windows 11。
+- Notepad++ x86 或 x64；插件架构必须与 Notepad++ 架构一致。
+- Microsoft Edge WebView2 Runtime。
+- x86 已在 Notepad++ 7.7 隔离环境中验证。x64 构建已完成，真实 x64 Notepad++ 宿主验收尚未完成；验证范围见 [docs/VALIDATION.md](docs/VALIDATION.md)。
 
 ## 安装
 
-### 右键菜单、浮动预览与 PDF 导出
+从 [GitHub Releases](https://github.com/knico/mdviewer/releases) 下载与 Notepad++ 架构匹配的 ZIP。解压到 Notepad++ 安装目录下的 `plugins/mdviewer`，确认 `mdviewer.dll` 与 `web` 目录位于同一目录，然后重启 Notepad++。在 **插件 → mdviewer → Preview** 打开预览。
 
-开发版新增 Floating preview 和 Export PDF... 命令，位于 **插件 → mdviewer**。Floating preview 打开可移动、缩放的独立窗口，可与停靠面板同时显示；关闭浮动窗口不会关闭当前文档。
+各发行包包含的功能以对应版本的 Release Notes 为准。
 
-Export PDF... 选择保存路径后直接生成 PDF 文件，不打开打印对话框。导出使用当前文档快照并等待 Mermaid 和字体就绪；页面工具栏和状态栏不写入 PDF。需要支持 PDF 导出的 WebView2 Runtime。
+完整安装与卸载步骤见 [docs/INSTALLATION.md](docs/INSTALLATION.md)。
 
-要把四个常用命令加入编辑区右键菜单的 **mdviewer** 子菜单，先通过 **设置 → 编辑右键菜单** 找到实际 contextMenu.xml 所在目录，关闭 Notepad++，然后运行：
+### 编辑区右键菜单
 
-    powershell -ExecutionPolicy Bypass -File scripts/install-context-menu.ps1 -ConfigDirectory '<实际配置目录>'
+Notepad++ 的编辑区上下文菜单由用户配置文件控制。仓库和发行包中的 `install-context-menu.ps1` 可以备份并更新该配置，将插件命令放入 **mdviewer** 子菜单。操作步骤见安装指南。
 
-安装脚本会备份原配置，保留用户已有条目，重复执行不会重复添加。便携版配置通常位于程序目录；安装版请使用实际用户配置目录。重启后生效。新功能尚未重新发布到 v0.1.0 Release。
+## 项目结构
 
-关闭 Notepad++，将对应架构目录的内容复制到其 `plugins/mdviewer`：x86 使用 `dist/x86/mdviewer`，x64 使用 `dist/mdviewer`。保持 `plugins/mdviewer/mdviewer.dll` 与旁边的 `web` 和许可证文件。重启后选择 **插件 → mdviewer → Preview**。不要只复制 DLL。可分发 ZIP 通过 `scripts/package.ps1 -Architecture x86|x64` 生成到 `dist/releases`。
+- `packages/markdown-core`：与编辑器无关的 Markdown 渲染逻辑。
+- `apps/preview-web`：预览界面及 WebView 消息协议。
+- `adapters/notepad-plus-plus/native`：Notepad++、Scintilla 和 WebView2 原生适配层。
+- `tests`：渲染、浏览器、原生模块和宿主集成检查。
 
-WebView2 用户数据放在 `%LOCALAPPDATA%/mdviewer/WebView2`。插件缺失资源或运行时时在面板提示错误。预览链接不会自动打开程序，可复制链接后自行打开。
+## 从源码构建
 
-## 验证记录
+构建环境需要 Windows、Visual Studio 2022 C++ 桌面开发工具、Node.js 22 或更高版本，以及 WebView2 SDK。
 
-截至 2026-11-18：工程和源码已建立；实际构建与测试状态见 docs/VALIDATION.md。尚未通过的验收项不能视为已交付可用版本。
+```powershell
+npm ci
+powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1
+npm test
+npm run build:web
+powershell -ExecutionPolicy Bypass -File scripts/build.ps1 -Architecture x64
+powershell -ExecutionPolicy Bypass -File scripts/build.ps1 -Architecture x86 -SkipWeb
+npm run test:browser
+powershell -ExecutionPolicy Bypass -File scripts/package.ps1 -Architecture x64
+powershell -ExecutionPolicy Bypass -File scripts/package.ps1 -Architecture x86
+```
 
-Notepad++ Plugin Admin 上架准备状态见 [docs/MARKETPLACE-READINESS.md](docs/MARKETPLACE-READINESS.md)。发布前需要公开 ZIP 下载地址和作者/项目主页信息。
+`bootstrap.ps1` 获取并校验 Notepad++ 接口头文件和 WebView2 SDK。可使用 `-WithNotepad` 下载便携式 Notepad++ 测试宿主。
+发行步骤见 [docs/RELEASE.md](docs/RELEASE.md)。
+
+## 扩展到其他编辑器
+
+新增编辑器适配器放在 `adapters/<editor>`，并复用 Markdown 核心及预览消息协议。编辑器 API、文档读取和宿主窗口管理应留在各自适配器中。
+
+## 开源许可
+
+mdviewer 以 GPL-3.0-or-later 发布。第三方组件及其许可证见 [THIRD_PARTY.md](THIRD_PARTY.md) 和发行包中的许可证文件。

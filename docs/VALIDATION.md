@@ -1,55 +1,39 @@
-# Validation — 2026-11-18
+# 验证状态
 
-## Development update — 2026-11-23
+## 自动化检查
 
-- Added independent floating preview and direct PDF export, preserving Preview/Refresh/About command indices.
-- Isolated Notepad++ 7.7 x86 passed docked rendering, live editing, two simultaneous preview WebViews, floating show/close, native Save PDF dialog, valid PDF file creation and clean shutdown.
-- Initial export automation failures came from IntPtr zero checks, localized dialog titles and nested filename controls; the corrected harness passed. A separate test WebView profile avoids existing-user profile collisions.
-- Context menu setup is opt-in: four commands under Plugin commands with configuration backup and duplicate prevention.
-- Published v0.1.0 ZIP files and marketplace hashes remain unchanged. New features are development candidates; x64 runtime acceptance remains open.
+- Node.js 渲染测试：CommonMark/GFM、危险 HTML 与链接过滤、代码高亮、数学公式及 Mermaid。
+- Chromium 浏览器检查：渲染结果、主题、窄屏布局、消息更新和不安全内容拦截。
+- Windows 原生构建：x86 和 x64 MSVC 构建。
+- 原生模块检查：DLL 加载、插件导出、Unicode 标识和架构信息。
+- 安装包检查：DLL 架构、文件版本、ZIP 根目录结构和离线预览资源。
 
-Marketplace packaging was rechecked on 2026-11-19: x86 and x64 packages have DLL FileVersion 0.1.0.0, correct PE machine type, and the plugin DLL plus offline web assets at the ZIP root. Their hashes and remaining listing gates are recorded in `docs/MARKETPLACE-READINESS.md`. This package check does not close real x64 host acceptance.
+## 宿主验证
 
-## x86 compatibility update (supersedes earlier x86 limitations)
+| 宿主 | 架构 | 结果 |
+| --- | --- | --- |
+| Notepad++ 7.7 | x86 | 在隔离副本中验证插件加载、中文文档、数学公式、Mermaid、编辑后刷新及正常退出。 |
+| x64 原生构建与 DLL 检查 | x64 | 构建和原生 DLL 检查已完成；真实 Notepad++ x64 宿主集成验证尚未完成。 |
 
-- Built dist/x86/mdviewer/mdviewer.dll with x86 MSVC and x86 WebView2 static loader; 32-bit PowerShell LoadLibrary and all six exports passed.
-- Notepad++ 7.7 x86 isolated copy passed actual plugin menu loading, embedded Chinese Markdown, KaTeX, Mermaid labels, real WM_CHAR editing notifications, automatic preview refresh and clean host exit (code 0).
-- Fixed native JSON control-character escaping discovered by embedded-host testing. Both architecture builds use the corrected source.
-- Fixed test-host startup by copying required langs/stylers resources; missing langs.xml was a test setup defect.
-- Initial test code used a process-local Scintilla text pointer across processes; corrected to standard character messages. This test failure did not establish a plugin defect.
-- x64 real-host acceptance remains open. Tab switching and docking restoration require separate manual validation.
+x86 结果不代表所有 Notepad++ 版本均已验证。x64 使用 Notepad++ 8.9.9.1 接口头文件构建；DLL 检查不代表真实宿主集成通过。
 
-## Passed
+## 当前限制
 
-- Windows x64 release DLL compiled with Visual Studio 2022 MSVC 14.44, Windows SDK 10.0.26100.0, WebView2 SDK 1.0.3650.58 and Notepad++ v8.9.9.1 interface headers.
-- Native LoadLibrary smoke: DLL loads, all six plugin exports resolve, name is mdviewer, Unicode enabled, three menu commands returned.
-- Node rendering tests: 3/3 passed (CommonMark/GFM, HTML/script-link rejection, code highlighting/math/Mermaid source).
-- Chromium browser checks passed: rendered Markdown, tables, math, Mermaid, code highlighting, light/dark theme, 360px layout, message updates and rejection of document scripts/unsafe links/remote image sources.
-- Visual review of preview-light.png identified missing Mermaid labels; top-level htmlLabels=false fixed the issue; a label-content assertion and browser rerun passed.
-- npm installation audit reported 0 vulnerabilities at dependency resolution time. This is not a complete security audit.
+- x64 宿主中的停靠、浮动、文档切换和关闭流程仍需实际验证。
+- 本地图片、相对文件链接、源文档同步滚动、HTML 导出和 ARM64 尚未实现。
+- PDF 导出依赖已实现 `PrintToPdf` 接口的 WebView2 Runtime。
 
-## Open acceptance gates
+## 复现检查
 
-- Real Notepad++ x64 loading, docking/floating, live Scintilla edits, tab switches, close/reopen and clean shutdown are **not yet verified**.
-- The existing D:/tools/Notepad++ host is version 7.7, PE machine 0x14C (x86). An isolated copy rejected the x64 plugin (no plugin menu); that result does not demonstrate an x64 plugin defect or successful host integration.
-- Download of the official Notepad++ 8.9.9.1 x64 portable archive failed because release-assets.githubusercontent.com could not be resolved. bootstrap.ps1 retains the official archive hash and is ready to retry.
-- Local and remote images, relative file links, synchronous source scrolling, export, x86 and ARM64 are outside v0.1 scope.
+```powershell
+npm ci
+npm test
+npm run build:web
+powershell -ExecutionPolicy Bypass -File scripts/build.ps1 -Architecture x64 -SkipWeb
+powershell -ExecutionPolicy Bypass -File scripts/build.ps1 -Architecture x86 -SkipWeb
+powershell -ExecutionPolicy Bypass -File tests/native-smoke.ps1
+npm run test:browser
+powershell -ExecutionPolicy Bypass -File tests/host-smoke.ps1
+```
 
-## Commands
-
-1. npm ci --registry=https://registry.npmjs.org
-2. powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1
-3. npm test
-4. powershell -ExecutionPolicy Bypass -File scripts/build.ps1
-5. powershell -ExecutionPolicy Bypass -File tests/native-smoke.ps1
-6. npm run test:browser
-7. powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1 -WithNotepad
-8. powershell -ExecutionPolicy Bypass -File tests/host-smoke.ps1
-
-Steps 7–8 remain open. The host smoke currently checks initial embedded preview and clean shutdown; live edits, switching tabs and docking restoration also require manual host validation.
-
-## Artifacts
-
-- dist/mdviewer/mdviewer.dll and adjacent web/ folder: installation candidate, not fully host-accepted release.
-- artifacts/preview-light.png and artifacts/preview-dark.png: real browser screenshots.
-- package-lock.json: exact dependency versions and integrity metadata.
+宿主检查需要先运行 `scripts/bootstrap.ps1 -WithNotepad`。自动化检查结果不替代各架构的真实用户环境验证。

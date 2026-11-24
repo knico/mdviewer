@@ -1,9 +1,13 @@
-# mdviewer implementation
+# Architecture
 
-Scope: Windows x64 Notepad++ plugin, dockable WebView2 preview, local bundled rendering assets, debounced edits and buffer switches.
+mdviewer separates Markdown rendering from the editor integration.
 
-Markdown target: CommonMark plus tables, task lists, strikethrough, fenced code highlighting, footnotes, math and Mermaid diagrams. There is no universal "latest Markdown" standard; supported extensions are explicitly listed and tested.
+- `packages/markdown-core` owns Markdown parsing and sanitization.
+- `apps/preview-web` renders the preview UI and handles messages from the host.
+- `adapters/notepad-plus-plus/native` integrates with Notepad++ and Scintilla, hosts WebView2, and synchronizes the active document.
 
-Architecture: the editor-independent Markdown core lives in `packages/markdown-core`; the Web preview app lives in `apps/preview-web`; and the current Notepad++ adapter lives in `adapters/notepad-plus-plus/native`. The native adapter reads the active Scintilla buffer and a fixed local HTTPS virtual host serves the preview application. Markdown travels through WebView2 JSON messages, never generated script. Rendering dependencies ship locally. Raw HTML is disabled and generated output is sanitized.
+The host sends document content to WebView2 using JSON messages. Preview assets are served from the plugin's local `web` directory through a fixed virtual host. The adapter restricts navigation, downloads, permissions, pop-up windows, and host objects. Raw HTML is disabled and rendered output is sanitized.
 
-Acceptance gates: JavaScript rendering tests; Windows x64 native compilation; browser visual/security checks; real Notepad++ plugin loading, docking, edits, tab switches and shutdown. Record completed gates and remaining limits in README.md.
+The supported syntax is CommonMark with tables, task lists, strikethrough, fenced-code highlighting, footnotes, math and Mermaid diagrams. There is no single extensible Markdown specification that defines a universal “latest” feature set.
+
+New editor integrations belong in `adapters/<editor>`. They should reuse the shared renderer and preview protocol without bringing editor APIs, native window handles, or Scintilla calls into the shared packages.

@@ -1,9 +1,14 @@
 {
   "name": "mdviewer",
   "version": "0.1.0",
-  "private": false,
+  "private": true,
   "type": "module",
-  "description": "Extensible offline Markdown preview core and Notepad++ adapter",
+  "description": "Offline Markdown preview plugin for Notepad++",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/knico/mdviewer.git"
+  },
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "build:web": "node scripts/build-web.mjs",
     "test": "node --test tests/*.test.mjs",
